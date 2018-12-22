@@ -1,28 +1,59 @@
 #include <thread>
-#include <unistd.h>
+#include <unistd.h> // usleep
+#include <iostream>
 #include "named_mutex.h"
 
 
 int main(void) {
-  tw::NamedMutex *m = tw::CreateNamedMutex("test", true);
 
-  printf("MAIN: waiting for lock\n");
-  m->Lock();
-  printf("MAIN: got lock\n");
+  const char* THREAD_LOCK_BANNER = R"banner(
+ _   _                        _   _            _
+| |_| |__  _ __ ___  __ _  __| | | | ___   ___| | __
+| __| '_ \| '__/ _ \/ _` |/ _` | | |/ _ \ / __| |/ /
+| |_| | | | | |  __/ (_| | (_| | | | (_) | (__|   <
+ \__|_| |_|_|  \___|\__,_|\__,_| |_|\___/ \___|_|\_\
+
+)banner";
+
+  const char* PROCESS_LOCK_BANNER = R"banner(
+
+                                     _            _
+ _ __  _ __ ___   ___ ___  ___ ___  | | ___   ___| | __
+| '_ \| '__/ _ \ / __/ _ \/ __/ __| | |/ _ \ / __| |/ /
+| |_) | | | (_) | (_|  __/\__ \__ \ | | (_) | (__|   <
+| .__/|_|  \___/ \___\___||___/___/ |_|\___/ \___|_|\_\
+|_|
+
+)banner";
+
+  std::cout << THREAD_LOCK_BANNER;
+
+  auto tm = tw::CreateNamedMutex("test", false);
+  if (tm->Init())
+  {
+    std::cout << "Mutex initialization failed" << std::endl;
+    return -1;
+  }
+  std::cout << "MAIN: created mutex \"test\'" << std::endl;
+
+  std::cout << "MAIN: test->lock" << std::endl;
+  tm->Lock();
+  std::cout << "MAIN: got lock" << std::endl;
 
   std::thread threadObj([=]{
-                          printf("  CHILD: waiting for lock\n");
-                          m->Lock();
-                          printf("  CHILD: got lock\n");
-                          m->UnLock();
-                          printf("  CHILD: unlock\n");
+                          std::cout << "  CHILD: test->lock" << std::endl;
+                          tm->Lock();
+                          std::cout << "  CHILD: got lock" << std::endl;
+                          tm->UnLock();
+                          std::cout << "  CHILD: test->unlock" << std::endl;
                         });
 
-  printf("MAIN: sleep 5 sec\n");
+  std::cout << "MAIN: sleep 5 sec" << std::endl;
   usleep(5000000);
-  printf("MAIN: unlock\n");
-  m->UnLock();
-  printf("MAIN: waiting for child thread to finish\n");
+  std::cout << "MAIN: test->unlock" << std::endl;
+  tm->UnLock();
+  std::cout << "MAIN: waiting for child thread to finish" << std::endl;
   threadObj.join();
-  delete m;
+
+  std::cout << PROCESS_LOCK_BANNER;
 }

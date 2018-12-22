@@ -13,12 +13,13 @@ namespace tw
     NamedMutexImpl& operator=(const NamedMutexImpl&) = delete;
     NamedMutexImpl(const NamedMutexImpl&) = delete;
 
+    int  Init();
     void Lock();
     void UnLock();
 
   private:
     sem_t *semaphore_ = nullptr;
-    std::string sem_name_;
-    bool shared = false;
+    std::string name_;          // mutex name
+    bool shared_ = false;       // is shared between processes
   };
 }

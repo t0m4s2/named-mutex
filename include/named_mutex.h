@@ -12,6 +12,7 @@ namespace tw
     NamedMutex& operator=(const NamedMutex&) = delete;
     NamedMutex(const NamedMutex&) = delete;
 
+    int  Init();
     void Lock();
     void UnLock();
 
@@ -20,5 +21,5 @@ namespace tw
     std::unique_ptr<NamedMutexImpl> pimpl;
   };
 
-  NamedMutex* CreateNamedMutex(const char* name, bool shared);
+  std::shared_ptr<NamedMutex> CreateNamedMutex(const char* name, bool shared);
 }

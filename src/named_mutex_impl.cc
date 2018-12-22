@@ -1,36 +1,43 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <fcntl.h>           /* For O_* constants */
 #include <sys/stat.h>        /* For mode constants */
 #include <semaphore.h>
+#include <iostream>
 #include "named_mutex_impl.h"
 
 namespace tw
 {
-  NamedMutex::NamedMutexImpl::NamedMutexImpl(const char* name, bool shared)
+  NamedMutex::NamedMutexImpl::NamedMutexImpl(const char* name, bool shared) : name_(name), shared_(shared)
   {
-    if(name)
-    {
-      sem_name_ = name;
-      semaphore_ = sem_open("test", O_CREAT, S_IRWXU, 1);
-    }
-    else
-    {
-      semaphore_ = (sem_t*)malloc(sizeof(sem_t));
-      sem_init(semaphore_, 0, 1);
-    }
-
-    if(semaphore_ == SEM_FAILED)
-    {
-      printf("FAILED\n");
-      semaphore_ = nullptr;
-    }
   }
-
 
   NamedMutex::NamedMutexImpl::~NamedMutexImpl()
   {
-    sem_close(semaphore_);
-    sem_unlink("test");
+    if(name_.size())
+    {
+      sem_close(semaphore_);
+      sem_unlink(name_.c_str());
+    }
+  }
+
+  int NamedMutex::NamedMutexImpl::Init()
+  {
+    if(name_.size() != 0)
+    {
+      semaphore_ = sem_open(name_.c_str(), O_CREAT, S_IRWXU, 1);
+      if (semaphore_ == SEM_FAILED)
+      {
+        std::cout << "Failed to open semaphore\n" << std::endl;
+        return -1;
+      }
+    }
+    else
+    {
+      std::cout << "Invalid mutex name" << std::endl;
+      return -1;
+    }
+
+    return 0;
   }
 
   void NamedMutex::NamedMutexImpl::Lock()

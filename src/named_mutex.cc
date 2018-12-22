@@ -3,9 +3,9 @@
 
 namespace tw
 {
-  NamedMutex* CreateNamedMutex(const char* name, bool shared)
+  std::shared_ptr<NamedMutex> CreateNamedMutex(const char* name, bool shared)
   {
-      return new NamedMutex(name, shared);
+      return std::make_shared<NamedMutex>(name, shared);
   }
 
   NamedMutex::NamedMutex(const char* name, bool shared) : pimpl{std::make_unique<NamedMutexImpl>(name, shared)}
@@ -13,6 +13,11 @@ namespace tw
   }
 
   NamedMutex::~NamedMutex() = default;
+
+  int NamedMutex::Init()
+  {
+      pimpl->Init();
+  }
 
   void NamedMutex::Lock()
   {
