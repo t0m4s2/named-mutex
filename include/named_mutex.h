@@ -17,8 +17,8 @@ namespace tw
     void UnLock();
 
   private:
-    class NamedMutexImpl;
-    std::unique_ptr<NamedMutexImpl> pimpl;
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
   };
 
   std::shared_ptr<NamedMutex> CreateNamedMutex(const char* name, bool shared);

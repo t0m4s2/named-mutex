@@ -1,4 +1,4 @@
-SRC = src/main.cc src/named_mutex.cc src/named_mutex_impl.cc
+SRC = src/main.cc src/named_mutex.cc
 OBJ = $(SRC:.cpp=.o)
 LIBS := -pthread -lrt
 
