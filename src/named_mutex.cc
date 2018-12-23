@@ -11,26 +11,31 @@ namespace tw
   class NamedMutex::Impl
   {
   public:
-    Impl(const char* name, bool shared) : name_(name), shared_(shared)
+    Impl(const char* name, NamedMutex::TYPE type) : name_(name), type_(type)
     {
     }
 
     ~Impl()
     {
         if(name_.size())
-          {
-            if(shared_)
-              {
+        {
+            if(type_ == PROCESS_OWNER)
+            {
                 sem_destroy(semaphore_);
                 munmap(semaphore_, sizeof(sem_t));
                 shm_unlink(name_.c_str());
-              }
+            }
+            else if(type_ == PROCESS)
+            {
+                munmap(semaphore_, sizeof(sem_t));
+                shm_unlink(name_.c_str());
+            }
             else
-              {
+            {
                 sem_close(semaphore_);
                 sem_unlink(name_.c_str());
-              }
-          }
+            }
+        }
     }
 
     Impl& operator=(const Impl&) = delete;
@@ -44,9 +49,8 @@ namespace tw
             return -1;
         }
 
-        if(shared_)
+        if(type_ == PROCESS_OWNER)
         {
-            // create semaphore that can be shared between processes
             int shm;
             if((shm = shm_open(name_.c_str(), O_RDWR | O_CREAT, S_IRWXU)) == -1)
             {
@@ -69,6 +73,27 @@ namespace tw
             if(sem_init(semaphore_, 1, 1) == -1)
             {
                 std::cout << "Failed to initialize semaphore" << std::endl;
+                return -1;
+            }
+        }
+        else if (type_ == PROCESS)
+        {
+            int shm;
+            if((shm = shm_open(name_.c_str(), O_RDWR | O_CREAT, S_IRWXU)) == -1)
+            {
+                std::cout << "Failed to open shared memory object" << std::endl;
+                return -1;
+            }
+
+            if (ftruncate(shm, sizeof(sem_t)) == -1)
+            {
+                std::cout << "Failed to resize shared memory" << std::endl;
+                return -1;
+            }
+
+            if((semaphore_ = (sem_t *)mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm, 0)) == MAP_FAILED)
+            {
+                std::cout << "Failed to map shared memory" << std::endl;
                 return -1;
             }
         }
@@ -104,15 +129,15 @@ namespace tw
   private:
     sem_t *semaphore_ = nullptr;
     std::string name_;          // mutex name
-    bool shared_ = false;       // is shared between processes
+    TYPE type_ = THREAD;        // is shared between processes
   };
 
-  std::shared_ptr<NamedMutex> CreateNamedMutex(const char* name, bool shared)
+  std::shared_ptr<NamedMutex> CreateNamedMutex(const char* name, NamedMutex::TYPE type)
   {
-      return std::make_shared<NamedMutex>(name, shared);
+      return std::make_shared<NamedMutex>(name, type);
   }
 
-  NamedMutex::NamedMutex(const char* name, bool shared) : pimpl{std::make_unique<Impl>(name, shared)}
+  NamedMutex::NamedMutex(const char* name, NamedMutex::TYPE type) : pimpl{std::make_unique<Impl>(name, type)}
   {
   }
 

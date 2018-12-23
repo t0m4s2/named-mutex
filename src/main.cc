@@ -18,7 +18,7 @@ void test1()
 
   std::cout << TEST1_BANNER;
 
-  auto tm = tw::CreateNamedMutex("test", false);
+  auto tm = tw::CreateNamedMutex("test", tw::NamedMutex::THREAD);
   if (tm->Init())
   {
     std::cout << "Mutex initialization failed" << std::endl;
@@ -57,7 +57,7 @@ void test2()
 
   std::cout << TEST1_BANNER2;
 
-  auto tm = tw::CreateNamedMutex("test", false);
+  auto tm = tw::CreateNamedMutex("test", tw::NamedMutex::THREAD);
   if (tm->Init())
   {
     std::cout << "Mutex initialization failed" << std::endl;
@@ -68,7 +68,7 @@ void test2()
   std::cout << "MAIN: test->lock" << std::endl;
 
   std::thread threadObjA([=]{
-                          auto tm = tw::CreateNamedMutex("test", false);
+                           auto tm = tw::CreateNamedMutex("test", tw::NamedMutex::THREAD);
                           if (tm->Init())
                           {
                             std::cout << "Mutex initialization failed" << std::endl;
@@ -102,7 +102,7 @@ void test3()
 
   std::cout << TEST3_BANNER;
 
-  auto pm = tw::CreateNamedMutex("test", true);
+  auto pm = tw::CreateNamedMutex("test", tw::NamedMutex::PROCESS_OWNER);
   if (pm->Init())
   {
     std::cout << "Mutex initialization failed" << std::endl;
@@ -157,7 +157,7 @@ void test4()
     std::cout << "  CHILD_P: sleep 1 sec" << std::endl;
     std::this_thread::sleep_for(1s);
 
-    auto pm = tw::CreateNamedMutex("proc_test", true);
+    auto pm = tw::CreateNamedMutex("proc_test", tw::NamedMutex::PROCESS);
     if (pm->Init())
     {
       std::cout << "  CHILD_P: Mutex initialization failed" << std::endl;
@@ -178,7 +178,7 @@ void test4()
     // parent process
     std:: cout << "PARENT_P: PID=" << getpid() << std::endl;
 
-    auto pm = tw::CreateNamedMutex("proc_test", true);
+    auto pm = tw::CreateNamedMutex("proc_test", tw::NamedMutex::PROCESS_OWNER);
     if (pm->Init())
     {
       std::cout << "PARENT_P: Mutex initialization failed" << std::endl;
@@ -191,7 +191,7 @@ void test4()
     std::cout << "PARENT_P: test->unlock" << std::endl;
     pm->UnLock();
 
-    std::cout << "PARENT_P: waiting for child thread to finish" << std::endl;
+    std::cout << "PARENT_P: waiting for child process to finish" << std::endl;
     do {
       w = waitpid(cpid, &wstatus, WUNTRACED | WCONTINUED);
       if (w == -1) {
