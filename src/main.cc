@@ -25,6 +25,7 @@ void test1()
     exit(EXIT_FAILURE);
   }
 
+  tm->UnLock();
   tm->Lock();
   std::cout << "MAIN: test->lock" << std::endl;
 
@@ -64,6 +65,7 @@ void test2()
     exit(EXIT_FAILURE);
   }
 
+  tm->UnLock();
   tm->Lock();
   std::cout << "MAIN: test->lock" << std::endl;
 
@@ -109,6 +111,7 @@ void test3()
     exit(EXIT_FAILURE);
   }
 
+  pm->UnLock();
   pm->Lock();
   std::cout << "MAIN: test->lock" << std::endl;
 
@@ -171,6 +174,7 @@ void test4()
     std::cout << "  CHILD_P: test->unlock" << std::endl;
     pm->UnLock();
 
+    printf("EXITING\n");
     exit(EXIT_SUCCESS);
   }
   else
@@ -184,6 +188,8 @@ void test4()
       std::cout << "PARENT_P: Mutex initialization failed" << std::endl;
       exit(EXIT_FAILURE);
     }
+    pm->UnLock();
+    pm->UnLock();
     pm->Lock();
     std::cout << "PARENT_P: test->lock" << std::endl;
     std::cout << "PARENT_P: sleep 5 sec" << std::endl;
