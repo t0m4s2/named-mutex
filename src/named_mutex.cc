@@ -176,7 +176,12 @@ namespace tw
     {
         if(semaphore_)
         {
-            sem_wait(semaphore_);
+          if(count_semaphore_)
+            {
+              sem_wait(count_semaphore_);
+              sem_wait(semaphore_);
+              sem_post(count_semaphore_);
+            }
         }
     }
 
@@ -186,14 +191,23 @@ namespace tw
         {
           if(count_semaphore_)
           {
-            sem_wait(count_semaphore_);
-            int count = 0;
-            sem_getvalue(semaphore_, &count);
+            if(sem_trywait(count_semaphore_) == -1)
+           {
+              if (errno == EAGAIN)
+              {
+                sem_post(semaphore_);
+              }
+            }
+            else
+            {
+              int count = 0;
+              sem_getvalue(semaphore_, &count);
 
-            if(count == 0)
-              sem_post(semaphore_);
+              if(count == 0)
+                sem_post(semaphore_);
 
-            sem_post(count_semaphore_);
+              sem_post(count_semaphore_);
+            }
           }
         }
     }
